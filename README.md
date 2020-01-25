@@ -1,2 +1,1 @@
-# matrix
-Chat platform plugin for Matrix servers
+This is the Matrix (the spec leveraged by the Synapse server, Riot chat client, etc.) platform integration plugin for Manebot.
