@@ -16,6 +16,6 @@ public class MatrixTextBuilder extends DefaultTextBuilder {
 
     @Override
     public TextBuilder appendUrl(String url) {
-        return appendRaw("<a href=\"" + getFormat().escape(url) + "\">" + getFormat().escape(url) + "</a>");
+        return appendRaw("<a href=\"" + url + "\">" + getFormat().escape(url) + "</a>");
     }
 }

@@ -15,11 +15,13 @@ import io.github.ma1uta.matrix.client.sync.SyncLoop;
 import io.github.ma1uta.matrix.client.sync.SyncParams;
 
 
-import io.github.ma1uta.matrix.event.Event;
-import io.github.ma1uta.matrix.event.Presence;
+import io.github.ma1uta.matrix.event.*;
 
-import io.github.ma1uta.matrix.event.RoomMessage;
+import io.github.ma1uta.matrix.event.Presence;
 import io.github.ma1uta.matrix.event.content.EventContent;
+import io.github.ma1uta.matrix.event.content.RoomMemberContent;
+import io.github.ma1uta.matrix.event.content.RoomNameContent;
+import io.github.ma1uta.matrix.event.content.RoomTopicContent;
 import io.github.ma1uta.matrix.event.message.Text;
 import io.github.ma1uta.matrix.support.jackson.JacksonContextResolver;
 import io.manebot.chat.ChatMessage;
@@ -30,6 +32,7 @@ import io.manebot.plugin.matrix.platform.MatrixPlatformConnection;
 import io.manebot.plugin.matrix.platform.chat.MatrixChat;
 import io.manebot.plugin.matrix.platform.chat.MatrixChatMessage;
 import io.manebot.plugin.matrix.platform.chat.MatrixChatSender;
+import io.manebot.plugin.matrix.platform.homeserver.model.Room;
 import io.manebot.plugin.matrix.platform.user.MatrixPlatformUser;
 import io.manebot.virtual.Virtual;
 import org.jsoup.Jsoup;
@@ -52,6 +55,7 @@ public class MatrixHomeserverConnection {
     private final LoadingCache<String, MatrixPlatformUser> users;
     private final LoadingCache<String, MatrixChat> chats;
     private final Map<String, PlatformUser.Status> statuses = new LinkedHashMap<>();
+    private final Map<String, Room> rooms = new LinkedHashMap<>();
 
     private final ExecutorService syncExecutor = Executors.newFixedThreadPool(1, Virtual.getInstance());
     private final MatrixPlatformConnection platformConnection;
@@ -86,14 +90,17 @@ public class MatrixHomeserverConnection {
                 });
     }
 
+    private Room getRoomById(String roomId) {
+        return rooms.computeIfAbsent(roomId, Room::new);
+    }
+
     private MatrixPlatformUser loadUserById(@Nonnull String userId) {
         Profile profile = client.profile().profile(userId).join();
         String displayName = profile.getDisplayName();
         if (displayName == null) {
             Matcher matcher = MatrixPlatformUser.PATTERN.matcher(userId);
             if (!matcher.find()) throw new IllegalArgumentException("userId is not in acceptable Matrix user ID format");
-            String username = matcher.group(1);
-            displayName = username;
+            displayName = matcher.group(1);
         }
         return new MatrixPlatformUser(this, userId, displayName);
     }
@@ -116,7 +123,11 @@ public class MatrixHomeserverConnection {
     }
 
     private MatrixChat loadChatById(@Nonnull String chatId) {
-        return new MatrixChat(this, chatId);
+        Room room = rooms.get(chatId);
+        if (room == null)
+            throw new IllegalArgumentException("room not found: " + chatId);
+
+        return new MatrixChat(this, chatId, room);
     }
 
     public MatrixChat getChatById(@Nonnull String chatId) {
@@ -332,6 +343,9 @@ public class MatrixHomeserverConnection {
     }
 
     private void handleRoom(String roomId, JoinedRoom room, boolean initial) {
+        if (initial)
+            room.getState().getEvents().forEach((event) -> handleRoomEvent(roomId, event, true));
+
         room.getTimeline().getEvents().forEach((event) -> handleRoomEvent(roomId, event, initial));
     }
 
@@ -344,17 +358,41 @@ public class MatrixHomeserverConnection {
     }
 
     private void handleRoomEvent(String roomId, Event event, boolean initial) {
-        if (initial) {
-            getChatById(roomId); // pre-cache
-            return;
-        }
+        Room room = getRoomById(roomId);
 
-        if (event instanceof RoomMessage) {
-            handleMessage(roomId, (RoomMessage) event);
+        if (event instanceof RoomMessage && !initial) {
+            handleMessage(room, (RoomMessage) event);
+        } else if (event instanceof RoomMember) {
+            String memberUserId = ((RoomMember) event).getSender();
+
+            RoomMemberContent content = (RoomMemberContent) event.getContent();
+            if (content.getDirect() != null)
+                room.setDirect(content.getDirect());
+
+            switch (content.getMembership()) {
+                case "join":
+                    room.addUserId(memberUserId);
+                    if (memberUserId.equals(getSelfId()))
+                        room.setJoined(true);
+                    break;
+                case "knock":
+                case "leave":
+                case "ban":
+                    room.removeUserId(memberUserId);
+                    if (memberUserId.equals(getSelfId()))
+                        room.setJoined(false);
+                    break;
+            }
+        } else if (event instanceof RoomName) {
+            RoomNameContent content = (RoomNameContent) event.getContent();
+            room.setName(content.getName());
+        } else if (event instanceof RoomTopic) {
+            RoomTopicContent content = (RoomTopicContent) event.getContent();
+            room.setTopic(content.getTopic());
         }
     }
 
-    private void handleMessage(String roomId, RoomMessage message) {
+    private void handleMessage(Room room, RoomMessage message) {
         EventContent eventContent = message.getContent();
         String canonicalMessage, textMessage;
         String userId = message.getSender();
@@ -380,7 +418,7 @@ public class MatrixHomeserverConnection {
         }
 
         // Get chat instance
-        MatrixChat chat = getChatById(roomId);
+        MatrixChat chat = getChatById(room.getId());
 
         // Get user instance
         MatrixPlatformUser platformUser = getUserById(userId);

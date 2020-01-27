@@ -5,21 +5,25 @@ import io.manebot.platform.Platform;
 import io.manebot.platform.PlatformUser;
 import io.manebot.plugin.matrix.platform.MatrixPlatformConnection;
 import io.manebot.plugin.matrix.platform.homeserver.MatrixHomeserverConnection;
+import io.manebot.plugin.matrix.platform.homeserver.model.Room;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class MatrixChat implements Chat {
     public static final Pattern PATTERN = Pattern.compile("\\!(.+):(.+)");
 
     private final MatrixHomeserverConnection connection;
     private final String id;
+    private final Room room;
 
-    public MatrixChat(MatrixHomeserverConnection connection, String id) {
+    public MatrixChat(MatrixHomeserverConnection connection, String id, Room room) {
         this.id = id;
         this.connection = connection;
+        this.room = room;
     }
 
     @Override
@@ -40,6 +44,11 @@ public class MatrixChat implements Chat {
     @Override
     public void setName(String name) throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getTopic() {
+        return room.getTopic();
     }
 
     @Override
@@ -69,12 +78,15 @@ public class MatrixChat implements Chat {
 
     @Override
     public Collection<PlatformUser> getPlatformUsers() {
-        return null;
+        return room.getUserIds().stream()
+                .map(connection::getUserById)
+                .collect(Collectors.toList());
     }
 
     @Override
     public boolean isPrivate() {
-        return false;
+        Collection<String> userIds = room.getUserIds();
+        return userIds.size() == 2 && userIds.contains(connection.getSelfId());
     }
 
     @Override
@@ -93,6 +105,11 @@ public class MatrixChat implements Chat {
     }
 
     @Override
+    public boolean canSendEmoji() {
+        return true;
+    }
+
+    @Override
     public TextBuilder text() {
         return new MatrixTextBuilder(this);
     }
@@ -104,6 +121,9 @@ public class MatrixChat implements Chat {
 
     @Override
     public Collection<ChatMessage> sendMessage(Consumer<ChatMessage.Builder> function) {
+        if (!room.isJoined())
+            throw new IllegalStateException("not a member of room: " + getId());
+
         MatrixChatMessage.Builder builder = new MatrixChatMessage.Builder(
                 (MatrixPlatformConnection) getPlatformConnection(),
                 connection.getHomeserver(),
