@@ -58,7 +58,7 @@ matrix homeserver enable id
 ## Uninstall
 
 ```
-plugin uninstall ts3
+plugin uninstall matrix
 ```
 
 You should restart Manebot too to make sure it's totally unplugged. You can clean up any no longer needed plugins it required with:
