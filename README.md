@@ -55,6 +55,8 @@ Finally, you can enable your homeserver (and therefore connect to it) with,
 matrix homeserver enable id
 ```
 
+This plugin will cache the access token and device ID of a user login session in the database.  If the access token becomes invalid, a new access token will be acquired.
+
 ## Uninstall
 
 ```
