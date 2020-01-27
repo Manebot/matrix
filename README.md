@@ -3,6 +3,10 @@
   <a href="https://discord.gg/qJPzQX3"><img height="28" src="https://img.shields.io/discord/563010101254815776.svg?label=Discord&logo=discord&style=for-the-badge"></a> <img height="28" src="https://img.shields.io/github/issues/manebot/discord.svg?style=for-the-badge">
 </p>
 
+<p align="center">
+<img src="https://raw.githubusercontent.com/Manebot/matrix/master/image.png">
+</p>
+
 This is the reference implementation of the **Matrix** platform for **Manebot**, my multi-platform (where platform means chat platform) chatbot framework. You can use this plugin to get Manebot to interact with your Matrix server(s).  The integration is completely seamless; simply install the Matrix plugin to Manebot, add some Matrix homeservers, and watch your existing plugins/features auto-magically work on the Matrix platform!
 
 The support for Matrix is provided through **jmdsk** by ma1ula: https://github.com/ma1uta/jmsdk.
