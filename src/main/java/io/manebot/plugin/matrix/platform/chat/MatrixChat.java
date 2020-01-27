@@ -1,22 +1,18 @@
 package io.manebot.plugin.matrix.platform.chat;
 
-import io.manebot.chat.Chat;
-import io.manebot.chat.ChatMessage;
-import io.manebot.chat.Community;
-import io.manebot.chat.TextFormat;
+import io.manebot.chat.*;
 import io.manebot.platform.Platform;
 import io.manebot.platform.PlatformUser;
 import io.manebot.plugin.matrix.platform.MatrixPlatformConnection;
 import io.manebot.plugin.matrix.platform.homeserver.MatrixHomeserverConnection;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class MatrixChat implements Chat {
-    public static final Pattern PATTERN = Pattern.compile("\\@(\\w+):(\\w+)");
+    public static final Pattern PATTERN = Pattern.compile("\\!(.+):(.+)");
 
     private final MatrixHomeserverConnection connection;
     private final String id;
@@ -97,6 +93,11 @@ public class MatrixChat implements Chat {
     }
 
     @Override
+    public TextBuilder text() {
+        return new MatrixTextBuilder(this);
+    }
+
+    @Override
     public TextFormat getFormat() {
         return MatrixTextFormat.INSTANCE;
     }
@@ -113,7 +114,7 @@ public class MatrixChat implements Chat {
         function.accept(builder);
 
         MatrixChatMessage chatMessage = builder.build();
-        connection.sendRawMessage(getId(), chatMessage);
+        connection.sendMessage(getId(), chatMessage);
         return Collections.singletonList(chatMessage);
     }
 

@@ -66,7 +66,7 @@ public final class MatrixTextFormat implements TextFormat {
 
     @Override
     public String escape(String string) {
-        return StringEscapeUtils.escapeHtml4(string);
+        return StringEscapeUtils.escapeHtml4(string).replaceAll("\\r?\\n", "<br/>");
     }
 
 }

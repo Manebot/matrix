@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.regex.Pattern;
 
 public class MatrixPlatformUser implements PlatformUser {
-    public static final Pattern PATTERN = Pattern.compile("\\@(\\w+):(\\w+)");
+    public static final Pattern PATTERN = Pattern.compile("\\@(.+):(.+)");
 
     private final MatrixHomeserverConnection connection;
     private final String id;

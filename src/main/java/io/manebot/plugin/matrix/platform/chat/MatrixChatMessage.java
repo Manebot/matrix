@@ -11,22 +11,23 @@ import java.util.Date;
 
 public class MatrixChatMessage extends BasicTextChatMessage {
     private final Date date;
-    private final MatrixChatSender sender;
-    private final String message;
     private final String rawMessage;
 
     public MatrixChatMessage(Date date, MatrixChatSender sender, String message, String rawMessage) {
-        super(sender, rawMessage);
+        super(sender, message);
 
         this.date = date;
-        this.sender = sender;
-        this.message = message;
         this.rawMessage = rawMessage;
     }
 
     @Override
-    public String getMessage() {
-        return message;
+    public Date getDate() {
+        return date;
+    }
+
+    @Override
+    public String getRawMessage() {
+        return rawMessage;
     }
 
     public static class Builder extends BasicTextChatMessage.Builder {

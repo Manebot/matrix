@@ -132,7 +132,7 @@ public class MatrixHomeserverConnection {
         return Collections.unmodifiableCollection(chats.asMap().keySet());
     }
 
-    public void sendRawMessage(String roomId, MatrixChatMessage chatMessage) {
+    public void sendMessage(String roomId, MatrixChatMessage chatMessage) {
         if (!isConnected())
             throw new IllegalStateException("not connected");
 
