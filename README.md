@@ -35,7 +35,7 @@ plugin enable matrix
 
 ## Connecting to a homeserver
 
-When you've installed and enabled the Matrix plugin, you can then add it to your homeserver(s),like Synapse.  As Matrix is a distributed architecture, the Matrix plugin supports connecting to any number of homeservers.
+When you've installed and enabled the Matrix plugin, you can then add it to your homeserver(s), like Synapse.  As Matrix is a distributed architecture, the Matrix plugin supports connecting to any number of homeservers.
 
 To connect to a homeserver, use:
 
@@ -56,6 +56,12 @@ matrix homeserver enable id
 ```
 
 This plugin will cache the access token and device ID of a user login session in the database.  If the access token becomes invalid, a new access token will be acquired.
+
+## Using the bot on Matrix
+
+To use the bot on matrix, simply invite it to any room; it will join any room it is invited to immediately.  Once the bot is in a room with you, you can use `.register` to recognize yourself on the bot.
+
+From there, you can use `.help` to look at available commands, such as `.plugin` to install additional features.
 
 ## Uninstall
 
