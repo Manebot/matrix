@@ -55,7 +55,7 @@ Finally, you can enable your homeserver (and therefore connect to it) with,
 matrix homeserver enable id
 ```
 
-**Uninstall**
+## Uninstall
 
 ```
 plugin uninstall ts3
