@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 public enum HomeserverConnectionProperty {
     NICKNAME("nickname", (pair) -> pair.getLeft().setDisplayName(pair.getRight())),
     USERNAME("username", (pair) -> pair.getLeft().setUsername(pair.getRight())),
-    PASSWORD("token", (pair) -> pair.getLeft().setToken(pair.getRight()));
+    PASSWORD("token", (pair) -> pair.getLeft().setAccessToken(pair.getRight()));
 
     private final Consumer<Pair<MatrixHomeserver, String>> setter;
     private final String name;

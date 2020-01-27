@@ -60,6 +60,7 @@ public class MatrixCommand extends AnnotatedCommandExecutor {
                 .item("Enabled", Boolean.toString(server.isEnabled()))
                 .item("Connected", Boolean.toString(server.isConnected()))
                 .item("Address", server.getEndpoint())
+                .item("Device ID", server.getDeviceId())
                 .item("Username", server.getUsername())
                 .item("Display Name", server.getDisplayName())
         );
@@ -72,14 +73,14 @@ public class MatrixCommand extends AnnotatedCommandExecutor {
                     @CommandArgumentString.Argument(label = "id") String id,
                     @CommandArgumentString.Argument(label = "endpoint") String endpoint,
                     @CommandArgumentString.Argument(label = "username") String username,
-                    @CommandArgumentString.Argument(label = "token") String token)
+                    @CommandArgumentString.Argument(label = "password") String password)
             throws CommandExecutionException {
         id = id.toLowerCase().trim();
 
         MatrixHomeserver server = serverManager.getServer(id);
         if (server != null) throw new CommandArgumentException("Homeserver \"" + id + "\" already exists.");
 
-        server = serverManager.addServer(id, endpoint, username, token);
+        server = serverManager.addServer(id, endpoint, username, password);
 
         sender.sendMessage("Homeserver \"" + server.getId() + "\" created.");
     }

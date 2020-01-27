@@ -28,10 +28,10 @@ public class HomeserverManager implements PluginReference {
         });
     }
 
-    public MatrixHomeserver addServer(String id, String endpoint, String username, String token) {
+    public MatrixHomeserver addServer(String id, String endpoint, String username, String password) {
         try {
             return database.executeTransaction(s -> {
-                MatrixHomeserver homeserver = new MatrixHomeserver(database, id, endpoint, username, token);
+                MatrixHomeserver homeserver = new MatrixHomeserver(database, id, endpoint, username, password);
                 s.persist(homeserver);
                 return homeserver;
             });

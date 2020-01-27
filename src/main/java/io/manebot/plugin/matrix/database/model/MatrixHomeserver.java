@@ -13,7 +13,7 @@ import javax.persistence.*;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.concurrent.Future;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -44,11 +44,17 @@ public class MatrixHomeserver extends TimedRow implements Community {
     @Column(nullable = false)
     private String endpoint;
 
-    @Column(nullable = false)
-    private String token;
-
     @Column(nullable = false, length = 1024)
     private String username;
+
+    @Column(nullable = false, length = 1024)
+    private String password;
+
+    @Column(nullable = true)
+    private String accessToken;
+
+    @Column(nullable = true)
+    private String deviceId;
 
     @Column(nullable = true)
     private String displayName;
@@ -56,12 +62,12 @@ public class MatrixHomeserver extends TimedRow implements Community {
     @Column
     private boolean enabled;
 
-    public MatrixHomeserver(Database database, String id, String endpoint, String username, String token) {
+    public MatrixHomeserver(Database database, String id, String endpoint, String username, String password) {
         this.database = database;
         this.id = id;
         this.endpoint = endpoint;
         this.username = username;
-        this.token = token;
+        this.password = password;
     }
 
     public MatrixHomeserver(Database database) {
@@ -85,25 +91,42 @@ public class MatrixHomeserver extends TimedRow implements Community {
 
     @Override
     public Collection<String> getChatIds() {
-        throw new UnsupportedOperationException();
+        MatrixHomeserverConnection connection = this.connection;
+        if (connection == null || !connection.isConnected()) return Collections.emptyList();
+
+        return connection.getChatIds();
     }
 
     @Override
     public Collection<Chat> getChats() {
-        throw new UnsupportedOperationException();
+        MatrixHomeserverConnection connection = this.connection;
+        if (connection == null || !connection.isConnected())
+            return Collections.emptyList();
+
+        return connection.getChatIds().stream()
+                .map(connection::getChatById)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
     public Collection<String> getPlatformUserIds() {
-        throw new UnsupportedOperationException();
+        MatrixHomeserverConnection connection = this.connection;
+        if (connection == null || !connection.isConnected()) return Collections.emptyList();
+
+        return connection.getUserIds();
     }
 
     @Override
     public Collection<PlatformUser> getPlatformUsers() {
-        PlatformConnection connection = getPlatform().getConnection();
+        MatrixHomeserverConnection connection = this.connection;
         if (connection == null || !connection.isConnected())
             return Collections.emptyList();
-        return getPlatformUserIds().stream().map(connection::getPlatformUser).collect(Collectors.toList());
+
+        return connection.getUserIds().stream()
+                .map(connection::getUserById)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -194,18 +217,56 @@ public class MatrixHomeserver extends TimedRow implements Community {
         }
     }
 
-    public String getToken() {
-        return token;
+    public String getPassword() {
+        return password;
     }
 
-    public void setToken(String token) {
-        if (this.token == null || !this.token.equals(token)) {
+    public void setPassword(String password) {
+        if (this.password == null || !this.password.equals(password)) {
             try {
-                this.token = database.executeTransaction(s -> {
+                this.password = database.executeTransaction(s -> {
                     MatrixHomeserver model = s.find(MatrixHomeserver.class, matrixHomeserverId);
-                    model.token = token;
+                    model.password = password;
                     model.setUpdated(System.currentTimeMillis());
-                    return token;
+                    return password;
+                });
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        if (this.accessToken == null || !this.accessToken.equals(accessToken)) {
+            try {
+                this.accessToken = database.executeTransaction(s -> {
+                    MatrixHomeserver model = s.find(MatrixHomeserver.class, matrixHomeserverId);
+                    model.accessToken = accessToken;
+                    model.setUpdated(System.currentTimeMillis());
+                    return accessToken;
+                });
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        if (this.deviceId == null || !this.deviceId.equals(deviceId)) {
+            try {
+                this.deviceId = database.executeTransaction(s -> {
+                    MatrixHomeserver model = s.find(MatrixHomeserver.class, matrixHomeserverId);
+                    model.deviceId = deviceId;
+                    model.setUpdated(System.currentTimeMillis());
+                    return deviceId;
                 });
             } catch (SQLException e) {
                 throw new RuntimeException(e);

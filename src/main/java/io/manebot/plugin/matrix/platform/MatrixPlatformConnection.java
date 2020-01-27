@@ -4,13 +4,14 @@ import io.manebot.chat.*;
 import io.manebot.platform.*;
 import io.manebot.plugin.*;
 import io.manebot.plugin.matrix.database.model.MatrixHomeserver;
+import io.manebot.plugin.matrix.platform.chat.MatrixChat;
 import io.manebot.plugin.matrix.platform.homeserver.HomeserverManager;
 import io.manebot.plugin.matrix.platform.homeserver.MatrixHomeserverConnection;
+import io.manebot.plugin.matrix.platform.user.MatrixPlatformUser;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 public class MatrixPlatformConnection extends AbstractPlatformConnection {
@@ -26,18 +27,48 @@ public class MatrixPlatformConnection extends AbstractPlatformConnection {
     }
 
     @Override
-    protected PlatformUser loadUserById(String s) {
-        return null;
+    protected PlatformUser loadUserById(String userId) {
+        Matcher matcher = MatrixPlatformUser.PATTERN.matcher(userId);
+        if (!matcher.find()) throw new IllegalArgumentException("user ID is not in acceptable Matrix user ID format");
+        String host = matcher.group(2);
+
+        MatrixHomeserverConnection connection = connections.stream()
+                .filter(x -> x.getHost().equalsIgnoreCase(host)).findFirst().orElse(null);
+
+        if (connection == null || !connection.isConnected())
+            return null;
+
+        return connection.getUserById(userId);
     }
 
     @Override
-    protected Chat loadChatById(String s) {
-        return null;
+    protected Chat loadChatById(String chatId) {
+        Matcher matcher = MatrixChat.PATTERN.matcher(chatId);
+        if (!matcher.find()) throw new IllegalArgumentException("chat ID is not in acceptable Matrix chat ID format");
+        String host = matcher.group(2);
+
+        MatrixHomeserverConnection connection = connections.stream()
+                .filter(x -> x.getHost().equalsIgnoreCase(host)).findFirst().orElse(null);
+
+        if (connection == null || !connection.isConnected())
+            return null;
+
+        return connection.getChatById(chatId);
     }
 
     @Override
-    protected Community loadCommunityById(String id) {
-        return null;
+    protected Community loadCommunityById(String communityId) {
+        return serverManager.getServer(communityId);
+    }
+
+    @Override
+    public MatrixPlatformUser getPlatformUser(String id) {
+        return (MatrixPlatformUser) super.getPlatformUser(id);
+    }
+
+    @Override
+    public MatrixChat getChat(String id) {
+        return (MatrixChat) super.getChat(id);
     }
 
     public MatrixHomeserverConnection connectToServer(MatrixHomeserver homeserver) {
@@ -67,22 +98,28 @@ public class MatrixPlatformConnection extends AbstractPlatformConnection {
 
     @Override
     public Collection<String> getPlatformUserIds() {
-        return null;
+        return connections.stream().filter(MatrixHomeserverConnection::isConnected)
+                .flatMap(connection -> connection.getUserIds().stream())
+                .collect(Collectors.toList());
     }
 
     @Override
     public Collection<String> getChatIds() {
-        return null;
+        return connections.stream().filter(MatrixHomeserverConnection::isConnected)
+                .flatMap(connection -> connection.getChatIds().stream())
+                .collect(Collectors.toList());
     }
 
     @Override
     public Collection<String> getCommunityIds() {
-        return getCommunities().stream().map(Community::getId).collect(Collectors.toList());
+        return serverManager.getServers().stream().map(MatrixHomeserver::getId)
+                .collect(Collectors.toList());
     }
 
     @Override
     public Collection<Community> getCommunities() {
-        return connections.stream().map(connection -> (Community) connection).collect(Collectors.toList());
+        return serverManager.getServers().stream().map(homeserver -> (Community) homeserver)
+                .collect(Collectors.toList());
     }
 
     public Plugin getPlugin() {
