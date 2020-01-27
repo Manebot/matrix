@@ -101,22 +101,6 @@ public class MatrixChat implements Chat {
         return MatrixTextFormat.INSTANCE;
     }
 
-    private void sendSingleMessage(String rawMessage) throws IOException {
-        connection.sendRawMessage(getId(), rawMessage);
-    }
-
-    private Collection<ChatMessage> sendMessage(MatrixChatMessage.Builder chatMessage) {
-        String rawMessage = chatMessage.getMessage();
-
-        try {
-            sendSingleMessage(rawMessage);
-        } catch (IOException e) {
-            throw new RuntimeException("Problem sending Teamspeak3 chat message", e);
-        }
-
-        return Collections.singletonList(chatMessage.build());
-    }
-
     @Override
     public Collection<ChatMessage> sendMessage(Consumer<ChatMessage.Builder> function) {
         MatrixChatMessage.Builder builder = new MatrixChatMessage.Builder(
@@ -128,7 +112,9 @@ public class MatrixChat implements Chat {
 
         function.accept(builder);
 
-        return sendMessage(builder);
+        MatrixChatMessage chatMessage = builder.build();
+        connection.sendRawMessage(getId(), chatMessage);
+        return Collections.singletonList(chatMessage);
     }
 
     @Override
