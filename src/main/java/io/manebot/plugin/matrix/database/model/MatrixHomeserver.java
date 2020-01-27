@@ -50,7 +50,7 @@ public class MatrixHomeserver extends TimedRow implements Community {
     @Column(nullable = false, length = 1024)
     private String password;
 
-    @Column(nullable = true)
+    @Column(nullable = true, length = 1024)
     private String accessToken;
 
     @Column(nullable = true)
