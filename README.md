@@ -21,6 +21,8 @@ You don't have to do anything specifically to make a bot for Matrix with Manebot
 
 In summary, simply follow the guides on making a bot with Manebot, and just install Matrix when you're ready to test that platform!
 
+https://github.com/Manebot/manebot/wiki/Docker-setup
+
 ## Installation
 
 Manebot uses the **Maven** repository system to coordinate plugin and dependency installation. Because of this, you can easily install the Matrix platform plugin without interacting with your filesystem at all.
