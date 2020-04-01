@@ -420,6 +420,10 @@ public class MatrixHomeserverConnection {
         // Get chat instance
         MatrixChat chat = getChatById(room.getId());
 
+        // prevent NPE: if a room is resolved null,
+        if (chat == null)
+            return;
+
         // Get user instance
         MatrixPlatformUser platformUser = getUserById(userId);
 

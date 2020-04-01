@@ -44,16 +44,31 @@ public class MatrixPlatformConnection extends AbstractPlatformConnection {
     @Override
     protected Chat loadChatById(String chatId) {
         Matcher matcher = MatrixChat.PATTERN.matcher(chatId);
-        if (!matcher.find()) throw new IllegalArgumentException("chat ID is not in acceptable Matrix chat ID format");
+        if (!matcher.find()) {
+            throw new IllegalArgumentException("chat ID is not in acceptable Matrix chat ID format");
+        }
+
         String host = matcher.group(2);
 
+        // attempt direct connection resolution first
         MatrixHomeserverConnection connection = connections.stream()
-                .filter(x -> x.getHost().equalsIgnoreCase(host)).findFirst().orElse(null);
+                .filter(x -> x.getHost().equalsIgnoreCase(host))
+                .max(Comparator.comparing(MatrixHomeserverConnection::isConnected))
+                .orElse(null);
 
-        if (connection == null || !connection.isConnected())
+        // attempt indirect resolution
+        if (connection == null) {
+            connection = connections.stream()
+                    .filter(x -> x.getChatIds().contains(chatId))
+                    .max(Comparator.comparing(MatrixHomeserverConnection::isConnected))
+                    .orElse(null);
+        }
+
+        if (connection != null) {
+            return connection.getChatById(chatId);
+        } else {
             return null;
-
-        return connection.getChatById(chatId);
+        }
     }
 
     @Override

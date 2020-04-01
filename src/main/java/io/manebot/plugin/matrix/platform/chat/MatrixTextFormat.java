@@ -16,7 +16,7 @@ public final class MatrixTextFormat implements TextFormat {
 
     @Override
     public boolean shouldMention(PlatformUser user) {
-        return user.isConnected();
+        return user != null && user.isConnected();
     }
 
     @Override
