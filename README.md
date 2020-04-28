@@ -1,6 +1,6 @@
 <p align="center">
   <br/>
-  <a href="https://discord.gg/qJPzQX3"><img height="28" src="https://img.shields.io/discord/563010101254815776.svg?label=Discord&logo=discord&style=for-the-badge"></a> <img height="28" src="https://img.shields.io/github/issues/manebot/discord.svg?style=for-the-badge">
+  <img height="28" src="https://img.shields.io/github/issues/manebot/discord.svg?style=for-the-badge">
 </p>
 
 <p align="center">
